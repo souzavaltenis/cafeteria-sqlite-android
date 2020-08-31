@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Cafeteria</string>
+    <string-array name="options">
+        <item>Bebidas</item>
+        <item>Comida</item>
+        <item>Mercearia</item>
+    </string-array>
+</resources>
