@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.CheckBox;
@@ -76,22 +77,44 @@ public class TelaBebida extends AppCompatActivity {
 
     //Atualiza o banco de dados quando o checkbox é clicado
     public void onFavoritoClicked(View view){
+        // indice da bebida clicada é um atributo global, atualizado no onCreate()
+        new UpdateBebidaTarefa().execute(indiceBebida);
+    }
 
-        // pego o índice da bebida atual
-        int drinkNo = indiceBebida;
-        CheckBox favorito = (CheckBox)findViewById(R.id.cbFavorito);
-        ContentValues bebidaValores = new ContentValues();
-        bebidaValores.put("FAVORITO", favorito.isChecked());
-        SQLiteOpenHelper bebidaBDHelper = new BebidaBDHelper(TelaBebida.this);
+    public class UpdateBebidaTarefa extends AsyncTask<Integer, Void, Boolean> {
 
-        try {
-            SQLiteDatabase db = bebidaBDHelper.getWritableDatabase();
-            db.update("BEBIDA", bebidaValores,
-                    "_id = ?", new String[] {Integer.toString(drinkNo)});
-            db.close();
-        } catch(SQLiteException e) {
-            Toast.makeText(TelaBebida.this,"Banco de dados indisponível: classe " +
-                    "TelaBebida", Toast.LENGTH_SHORT).show();
+        ContentValues bebidaValores;
+
+        @Override
+        protected void onPreExecute() {
+            CheckBox favorito = (CheckBox)findViewById(R.id.cbFavorito);
+            bebidaValores = new ContentValues();
+            bebidaValores.put("FAVORITO", favorito.isChecked());
         }
+
+        @Override
+        protected Boolean doInBackground(Integer... bebidas) {
+            int bebidaNo = bebidas[0];
+            SQLiteOpenHelper bebidaBDHelper = new BebidaBDHelper(TelaBebida.this);
+            try {
+                SQLiteDatabase db = bebidaBDHelper.getWritableDatabase();
+                db.update("BEBIDA", bebidaValores,
+                        "_id = ?", new String[] {Integer.toString(bebidaNo)});
+                db.close();
+                return true;
+            } catch(SQLiteException e) {
+                return false;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Boolean success) {
+            if (!success) {
+                Toast toast = Toast.makeText(TelaBebida.this,
+                        "Banco de dados indisponível: classe BebidaActivity", Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        }
+        
     }
 }
